@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import "package:http/http.dart" as http;
 import '../models/product.dart';
 
 class Products with ChangeNotifier {
@@ -42,7 +45,21 @@ class Products with ChangeNotifier {
     return _list.firstWhere((element) => element.id == id);
   }
 
-  void addProduct(Product product) {
+  void addProduct(Product product)async {
+    final url = Uri.parse(
+        "https://shopping-app-8d541-default-rtdb.firebaseio.com/products.json");
+   await http.post(
+      url,
+      body: jsonEncode(
+        {
+          "title": product.title,
+          "description": product.description,
+          "imageUrl": product.imageUrl,
+          "price": product.price,
+          "isFavorite": product.isFavorite,
+        },
+      ),
+    );
     _list.add(
       Product(
         id: UniqueKey().toString(),

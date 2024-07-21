@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/products.dart';
 
-
 class EditProductScreen extends StatefulWidget {
   const EditProductScreen({super.key});
   static const routeName = "/edit-product";
@@ -37,18 +36,26 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _init = false;
   }
 
+  bool _isloading = false;
+
   void submit() {
     setState(() {
       _isImage = _product.imageUrl.isNotEmpty;
     });
     if (_formKey.currentState!.validate() && _isImage) {
       _formKey.currentState!.save();
-      print(_product.title);
+      setState(() {
+        _isloading = true;
+      });
+
       if (_product.id.isEmpty) {
         Provider.of<Products>(context, listen: false).addProduct(_product);
       } else {
         Provider.of<Products>(context, listen: false).updateProduct(_product);
       }
+      setState(() {
+        _isloading = false;
+      });
       Navigator.of(context).pop();
     }
   }
@@ -118,10 +125,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
         centerTitle: true,
         title: const Text("Mahsulot qo'shish"),
         actions: [
-          IconButton(
-            onPressed: () => submit(),
-            icon: const Icon(Icons.save),
-          ),
+          _isloading
+              ? CircularProgressIndicator()
+              : IconButton(
+                  onPressed: () => submit(),
+                  icon: const Icon(Icons.save),
+                ),
         ],
       ),
       body: GestureDetector(
@@ -241,10 +250,16 @@ class _EditProductScreenState extends State<EditProductScreen> {
                               style: TextStyle(
                                   color: _isImage ? Colors.black : Colors.red),
                             )
-                          : Image.network(
-                              _product.imageUrl,
-                              fit: BoxFit.cover,
+                          : Container(
                               width: double.infinity,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: NetworkImage(
+                                    _product.imageUrl,
+                                  ),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
                     ),
                   ),
