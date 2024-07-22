@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import "package:http/http.dart" as http;
+import 'package:shopping_app_with_http/services/http_exception.dart';
 import '../models/product.dart';
 
 class Products with ChangeNotifier {
@@ -48,6 +49,7 @@ class Products with ChangeNotifier {
   Future<void> getProductFromFirebase() async {
     final url = Uri.parse(
         "https://shopping-app-8d541-default-rtdb.firebaseio.com/products.json");
+
     try {
       final response = await http.get(url);
       if (response.statusCode == 200 && jsonDecode(response.body) != null) {
@@ -55,7 +57,14 @@ class Products with ChangeNotifier {
         final List<Product> loadedProduct = [];
 
         data.forEach(
-          (key, value) {
+          (key, value)  {
+            // final favoriteUrl = Uri.parse(
+            //     "https://shopping-app-8d541-default-rtdb.firebaseio.com/favorites/$key.json");
+            // final favoriteRespponse = await http.get(favoriteUrl);
+            // var isFavorite = (jsonDecode(favoriteRespponse.body)
+            //         as Map<String, dynamic>)["isFavorite"] ??
+            //     false;
+            // print(isFavorite);
             loadedProduct.add(
               Product(
                 id: key,
@@ -63,6 +72,7 @@ class Products with ChangeNotifier {
                 description: value["description"],
                 imageUrl: value["imageUrl"],
                 price: value["price"],
+                // isFavorite: isFavorite,
                 // isFavorite: value["isFavorite"]
               ),
             );
@@ -139,11 +149,20 @@ class Products with ChangeNotifier {
     final url = Uri.parse(
         "https://shopping-app-8d541-default-rtdb.firebaseio.com/products/$id.json");
     try {
-      await http.delete(url);
+      final deletedProduct = _list.firstWhere((element) => element.id == id);
+      final index = _list.indexWhere(
+        (element) => element.id == id,
+      );
+      _list.removeWhere((element) => element.id == id);
+      final response = await http.delete(url);
+      print(response.statusCode);
+      if (response.statusCode >= 400) {
+        _list.insert(index, deletedProduct);
+        throw HttpExceptions(message: "O'chirishda xatolik");
+      }
       notifyListeners();
     } catch (e) {
       rethrow;
     }
-    // _list.removeWhere((element) => element.id == id);
   }
 }

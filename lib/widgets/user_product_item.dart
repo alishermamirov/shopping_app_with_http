@@ -8,6 +8,32 @@ import '../screens/edit_product_screen.dart';
 class UserProductItem extends StatelessWidget {
   const UserProductItem({super.key});
 
+  // Future<void> deleteProduct(
+  //     BuildContext context, Function deletingFunction) async {
+  //   try {
+  //     await deletingFunction();
+  //     Navigator.pop(context);
+  //   } catch (error) {
+  //     await showDialog(
+  //       context: context,
+  //       builder: (context) {
+  //         return AlertDialog(
+  //           title: Text("Xatolik"),
+  //           content: Text(error.toString()),
+  //           actions: [
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 Navigator.of(context).pop();
+  //               },
+  //               child: Text("OK"),
+  //             ),
+  //           ],
+  //         );
+  //       },
+  //     );
+  //   }
+  // }
+
   void showDeleteProduct(BuildContext context,
       {required Function deletingFunction}) {
     showDialog(
@@ -37,7 +63,7 @@ class UserProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context);
-
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     return Card(
       child: ListTile(
         leading: CircleAvatar(
@@ -57,10 +83,22 @@ class UserProductItem extends StatelessWidget {
               ),
             ),
             IconButton(
-              onPressed: () => showDeleteProduct(context,
-                  deletingFunction: () =>
-                      Provider.of<Products>(context, listen: false)
-                          .deleteProduct(product.id)),
+              onPressed: () =>
+                  showDeleteProduct(context, deletingFunction: () async {
+                try {
+                  await Provider.of<Products>(context, listen: false)
+                      .deleteProduct(product.id);
+                } catch (error) {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        error.toString(),
+                      ),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                }
+              }),
               icon: const Icon(
                 Icons.delete,
                 color: Colors.red,

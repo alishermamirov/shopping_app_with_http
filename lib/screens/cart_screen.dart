@@ -47,12 +47,16 @@ class CartScreen extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                     TextButton(
-                      onPressed: () {
-                        Provider.of<Orders>(context, listen: false).addToOrders(
-                            cart.totalPrice(), cart.items.values.toList());
-                        cart.clearCart();
-                        Navigator.of(context).pushNamed(OrdersScreen.routeName);
-                      },
+                      onPressed: cart.items.isEmpty
+                          ? null
+                          : () {
+                              Provider.of<Orders>(context, listen: false)
+                                  .addToOrders(cart.totalPrice(),
+                                      cart.items.values.toList());
+                              cart.clearCart();
+                              Navigator.of(context)
+                                  .pushNamed(OrdersScreen.routeName);
+                            },
                       child: const Text(
                         "Buyurtma qilish",
                         style: TextStyle(
