@@ -53,7 +53,7 @@ class Products with ChangeNotifier {
       if (response.statusCode == 200 && jsonDecode(response.body) != null) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final List<Product> loadedProduct = [];
-        
+
         data.forEach(
           (key, value) {
             loadedProduct.add(
@@ -87,7 +87,7 @@ class Products with ChangeNotifier {
             "description": product.description,
             "imageUrl": product.imageUrl,
             "price": product.price,
-            "isFavorite": product.isFavorite,
+            // "isFavorite": product.isFavorite,
           },
         ),
       );
@@ -108,17 +108,41 @@ class Products with ChangeNotifier {
     }
   }
 
-  void updateProduct(Product updatedProduct) {
-    int index = _list.indexWhere((element) => element.id == updatedProduct.id);
-
+  Future<void> updateProduct(Product updatedProduct) async {
+    int index = _list.indexWhere(
+      (element) => element.id == updatedProduct.id,
+    );
     if (index >= 0) {
+      final url = Uri.parse(
+          "https://shopping-app-8d541-default-rtdb.firebaseio.com/products/${updatedProduct.id}.json");
+      try {
+        await http.put(
+          url,
+          body: jsonEncode({
+            "title": updatedProduct.title,
+            "description": updatedProduct.description,
+            "imageUrl": updatedProduct.imageUrl,
+            "price": updatedProduct.price,
+            // "isFavorite": updatedProduct.isFavorite,
+          }),
+        );
+      } catch (e) {
+        rethrow;
+      }
       _list[index] = updatedProduct;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
-  void deleteProduct(String id) {
-    _list.removeWhere((element) => element.id == id);
-    notifyListeners();
+  Future<void> deleteProduct(String id) async {
+    final url = Uri.parse(
+        "https://shopping-app-8d541-default-rtdb.firebaseio.com/products/$id.json");
+    try {
+      await http.delete(url);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+    // _list.removeWhere((element) => element.id == id);
   }
 }

@@ -7,11 +7,14 @@ import '../widgets/main_drawer.dart';
 import '../widgets/user_product_item.dart';
 import 'edit_product_screen.dart';
 
-
 class ManageProductScreen extends StatelessWidget {
   const ManageProductScreen({super.key});
 
   static const routeName = "/manage-product";
+  Future<void> _refreshProducts(BuildContext context) async {
+    await Provider.of<Products>(context, listen: false)
+        .getProductFromFirebase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,15 +33,18 @@ class ManageProductScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: products.list.length,
-        itemBuilder: (context, index) {
-          final product = products.list[index];
-          return ChangeNotifierProvider<Product>.value(
-            value: product,
-            child: const UserProductItem(),
-          );
-        },
+      body: RefreshIndicator(
+        onRefresh: () => _refreshProducts(context),
+        child: ListView.builder(
+          itemCount: products.list.length,
+          itemBuilder: (context, index) {
+            final product = products.list[index];
+            return ChangeNotifierProvider<Product>.value(
+              value: product,
+              child: const UserProductItem(),
+            );
+          },
+        ),
       ),
     );
   }
