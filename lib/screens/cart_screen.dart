@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -46,24 +47,7 @@ class CartScreen extends StatelessWidget {
                       ),
                       backgroundColor: Colors.green,
                     ),
-                    TextButton(
-                      onPressed: cart.items.isEmpty
-                          ? null
-                          : () {
-                              Provider.of<Orders>(context, listen: false)
-                                  .addToOrders(cart.totalPrice(),
-                                      cart.items.values.toList());
-                              cart.clearCart();
-                              Navigator.of(context)
-                                  .pushNamed(OrdersScreen.routeName);
-                            },
-                      child: const Text(
-                        "Buyurtma qilish",
-                        style: TextStyle(
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
+                    OrderButton(cart: cart)
                   ],
                 ),
               ),
@@ -71,7 +55,7 @@ class CartScreen extends StatelessWidget {
           ),
           Expanded(
               child: cart.items.isEmpty
-                  ? Center(
+                  ? const Center(
                       child: Text(
                         "Savatcha bo'sh",
                         style: TextStyle(
@@ -95,6 +79,56 @@ class CartScreen extends StatelessWidget {
                     ))
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  final Cart cart;
+  const OrderButton({
+    Key? key,
+    required this.cart,
+  }) : super(key: key);
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: widget.cart.items.isEmpty
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              await Provider.of<Orders>(context, listen: false).addToOrders(
+                widget.cart.totalPrice(),
+                widget.cart.items.values.toList(),
+              );
+              widget.cart.clearCart();
+              setState(() {
+                _isLoading = false;
+              });
+              Navigator.of(context).pushNamed(OrdersScreen.routeName);
+            },
+      child: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : Text(
+              "Buyurtma qilish",
+              style: TextStyle(
+                fontSize: 15,
+              ),
+            ),
     );
   }
 }

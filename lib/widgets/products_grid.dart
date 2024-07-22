@@ -19,71 +19,64 @@ class ProductsGrid extends StatefulWidget {
 }
 
 class _ProductsGridState extends State<ProductsGrid> {
-  var _init = true;
-  var _isLoading = false;
-  // @override
-  // void initState() {
-  //   // Provider.of<Products>(context,listen: false).getProductFromFirebase();
-  //   Future.delayed(Duration.zero).then(
-  //     (value) {
-  //       Provider.of<Products>(context, listen: false).getProductFromFirebase();
-  //     },
-  //   );
-  //   super.initState();
-  // }
-
+  late Future _productFuture;
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_init) {
-      setState(() {
-        _isLoading = true;
-      });
-      Provider.of<Products>(context, listen: false)
-          .getProductFromFirebase()
-          .then(
-        (value) {
-          setState(() {
-            _isLoading = false;
-          });
-        },
-      );
-    }
-    setState(() {
-      _init = false;
-    });
+  void initState() {
+    super.initState();
+    _productFuture = getProducts();
+  }
+
+  Future getProducts() async {
+    return Provider.of<Products>(context, listen: false)
+        .getProductFromFirebase();
   }
 
   @override
   Widget build(BuildContext context) {
-    final productData = Provider.of<Products>(context);
-    final products =
-        widget.showOnlyFavorites ? productData.favorites : productData.list;
-    if (_isLoading) {
-      return Center(
-        child: CircularProgressIndicator(),
-      );
-    } else {
-      return products.isEmpty
-          ? Center(
-              child: Text("Mahsulotlar mavjud emas"),
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: products.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 1,
-                childAspectRatio: 3 / 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-              ),
-              itemBuilder: (context, index) {
-                return ChangeNotifierProvider<Product>.value(
-                  value: products[index],
-                  child: const ProductGridItem(),
-                );
+    return FutureBuilder(
+      future: _productFuture,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        } else {
+          if (snapshot.error == null) {
+            return Consumer<Products>(
+              builder: (context, productData, child) {
+                final products = widget.showOnlyFavorites
+                    ? productData.favorites
+                    : productData.list;
+                return products.isEmpty
+                    ? const Center(
+                        child: Text("Buyurtmalar mavjud emas"),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(8),
+                        itemCount: products.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 1,
+                          childAspectRatio: 3 / 2,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                        ),
+                        itemBuilder: (context, index) {
+                          return ChangeNotifierProvider<Product>.value(
+                            value: products[index],
+                            child: const ProductGridItem(),
+                          );
+                        },
+                      );
               },
             );
-    }
+          } else {
+            return const Center(
+              child: Text("Xatolik yuz berdi"),
+            );
+          }
+        }
+      },
+    );
   }
 }

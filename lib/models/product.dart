@@ -27,7 +27,7 @@ class Product with ChangeNotifier {
     notifyListeners();
 
     final url = Uri.parse(
-        "https://shopping-app-8d541-default-rtdb.firebaseio.com/favorites/$id");
+        "https://shopping-app-8d541-default-rtdb.firebaseio.com/favorites/$id.json");
     try {
       final reponse = await http.put(
         url,

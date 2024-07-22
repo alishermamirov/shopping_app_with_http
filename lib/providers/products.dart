@@ -57,7 +57,7 @@ class Products with ChangeNotifier {
         final List<Product> loadedProduct = [];
 
         data.forEach(
-          (key, value)  {
+          (key, value) {
             // final favoriteUrl = Uri.parse(
             //     "https://shopping-app-8d541-default-rtdb.firebaseio.com/favorites/$key.json");
             // final favoriteRespponse = await http.get(favoriteUrl);

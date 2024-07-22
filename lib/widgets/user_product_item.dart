@@ -8,31 +8,7 @@ import '../screens/edit_product_screen.dart';
 class UserProductItem extends StatelessWidget {
   const UserProductItem({super.key});
 
-  // Future<void> deleteProduct(
-  //     BuildContext context, Function deletingFunction) async {
-  //   try {
-  //     await deletingFunction();
-  //     Navigator.pop(context);
-  //   } catch (error) {
-  //     await showDialog(
-  //       context: context,
-  //       builder: (context) {
-  //         return AlertDialog(
-  //           title: Text("Xatolik"),
-  //           content: Text(error.toString()),
-  //           actions: [
-  //             ElevatedButton(
-  //               onPressed: () {
-  //                 Navigator.of(context).pop();
-  //               },
-  //               child: Text("OK"),
-  //             ),
-  //           ],
-  //         );
-  //       },
-  //     );
-  //   }
-  // }
+ 
 
   void showDeleteProduct(BuildContext context,
       {required Function deletingFunction}) {
