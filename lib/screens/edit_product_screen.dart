@@ -38,7 +38,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   bool _isloading = false;
 
-  void submit() {
+  void submit() async {
+    FocusScope.of(context).unfocus();
     setState(() {
       _isImage = _product.imageUrl.isNotEmpty;
     });
@@ -49,14 +50,41 @@ class _EditProductScreenState extends State<EditProductScreen> {
       });
 
       if (_product.id.isEmpty) {
-        Provider.of<Products>(context, listen: false).addProduct(_product);
+        try {
+          await Provider.of<Products>(context, listen: false)
+              .addProduct(_product);
+          // Navigator.of(context).pop();
+        } catch (error) {
+          await showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text("Xatolik"),
+                content: Text(error.toString()),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        } finally {
+          setState(() {
+            _isloading = false;
+          });
+          Navigator.of(context).pop();
+        }
       } else {
         Provider.of<Products>(context, listen: false).updateProduct(_product);
+        setState(() {
+          _isloading = false;
+        });
+        Navigator.of(context).pop();
       }
-      setState(() {
-        _isloading = false;
-      });
-      Navigator.of(context).pop();
     }
   }
 
@@ -125,150 +153,158 @@ class _EditProductScreenState extends State<EditProductScreen> {
         centerTitle: true,
         title: const Text("Mahsulot qo'shish"),
         actions: [
-          _isloading
-              ? CircularProgressIndicator()
-              : IconButton(
-                  onPressed: () => submit(),
-                  icon: const Icon(Icons.save),
-                ),
+          IconButton(
+            onPressed: () => submit(),
+            icon: const Icon(Icons.save),
+          ),
         ],
       ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Form(
-          key: _formKey,
-          // autovalidateMode: AutovalidateMode.always,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                TextFormField(
-                  initialValue: _product.title,
-                  validator: (value) {
-                    if (value == null || value.isEmpty || value.length < 3) {
-                      return "Iltimos mahsulot nomini kiriting";
-                    }
-                    return null;
-                  },
-                  onSaved: (newValue) {
-                    _product = Product(
-                      id: _product.id,
-                      title: newValue!,
-                      description: _product.description,
-                      imageUrl: _product.imageUrl,
-                      price: _product.price,
-                      isFavorite: _product.isFavorite,
-                    );
-                  },
-                  decoration: const InputDecoration(
-                    labelText: "Nomi",
-                    border: OutlineInputBorder(),
-                  ),
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                TextFormField(
-                  initialValue:
-                      _product.price == 0.0 ? "" : _product.price.toString(),
-                  validator: (value) {
-                    if (value == null ||
-                        value.isEmpty ||
-                        double.parse(value) < 1) {
-                      return "Iltimos mahsulot narxini 0dan katta kiriting";
-                    }
-                    return null;
-                  },
-                  onSaved: (newValue) {
-                    _product = Product(
-                      id: _product.id,
-                      title: _product.title,
-                      description: _product.description,
-                      imageUrl: _product.imageUrl,
-                      price: double.parse(newValue!),
-                      isFavorite: _product.isFavorite,
-                    );
-                  },
-                  decoration: const InputDecoration(
-                    labelText: "Narxi",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                TextFormField(
-                  initialValue: _product.description,
-                  validator: (value) {
-                    if (value == null || value.isEmpty || value.length < 5) {
-                      return "Iltimos mahsulot tarifini kiriting";
-                    }
-                    return null;
-                  },
-                  onSaved: (newValue) {
-                    _product = Product(
-                      id: _product.id,
-                      title: _product.title,
-                      description: newValue!,
-                      imageUrl: _product.imageUrl,
-                      price: _product.price,
-                      isFavorite: _product.isFavorite,
-                    );
-                  },
-                  decoration: const InputDecoration(
-                    labelText: "Tarifi",
-                    alignLabelWithHint: true,
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 5,
-                ),
-                const SizedBox(
-                  height: 16,
-                ),
-                Card(
-                  margin: const EdgeInsets.all(0),
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                        width: 1, color: _isImage ? Colors.black : Colors.red),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: InkWell(
-                    onTap: () => showImageDialog(context),
-                    splashColor: Colors.green,
-                    highlightColor: Colors.green,
-                    borderRadius: BorderRadius.circular(5),
-                    child: Container(
-                      height: 200,
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      child: _product.imageUrl.isEmpty
-                          ? Text(
-                              "Asosiy rasm urlini kiriting",
-                              style: TextStyle(
-                                  color: _isImage ? Colors.black : Colors.red),
-                            )
-                          : Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                    _product.imageUrl,
+      body: _isloading
+          ? Center(child: CircularProgressIndicator())
+          : GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Form(
+                key: _formKey,
+                // autovalidateMode: AutovalidateMode.always,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        initialValue: _product.title,
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              value.length < 3) {
+                            return "Iltimos mahsulot nomini kiriting";
+                          }
+                          return null;
+                        },
+                        onSaved: (newValue) {
+                          _product = Product(
+                            id: _product.id,
+                            title: newValue!,
+                            description: _product.description,
+                            imageUrl: _product.imageUrl,
+                            price: _product.price,
+                            isFavorite: _product.isFavorite,
+                          );
+                        },
+                        decoration: const InputDecoration(
+                          labelText: "Nomi",
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      TextFormField(
+                        initialValue: _product.price == 0.0
+                            ? ""
+                            : _product.price.toString(),
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              double.parse(value) < 1) {
+                            return "Iltimos mahsulot narxini 0dan katta kiriting";
+                          }
+                          return null;
+                        },
+                        onSaved: (newValue) {
+                          _product = Product(
+                            id: _product.id,
+                            title: _product.title,
+                            description: _product.description,
+                            imageUrl: _product.imageUrl,
+                            price: double.parse(newValue!),
+                            isFavorite: _product.isFavorite,
+                          );
+                        },
+                        decoration: const InputDecoration(
+                          labelText: "Narxi",
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      TextFormField(
+                        initialValue: _product.description,
+                        validator: (value) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              value.length < 5) {
+                            return "Iltimos mahsulot tarifini kiriting";
+                          }
+                          return null;
+                        },
+                        onSaved: (newValue) {
+                          _product = Product(
+                            id: _product.id,
+                            title: _product.title,
+                            description: newValue!,
+                            imageUrl: _product.imageUrl,
+                            price: _product.price,
+                            isFavorite: _product.isFavorite,
+                          );
+                        },
+                        decoration: const InputDecoration(
+                          labelText: "Tarifi",
+                          alignLabelWithHint: true,
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 5,
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      Card(
+                        margin: const EdgeInsets.all(0),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                              width: 1,
+                              color: _isImage ? Colors.black : Colors.red),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: InkWell(
+                          onTap: () => showImageDialog(context),
+                          splashColor: Colors.green,
+                          highlightColor: Colors.green,
+                          borderRadius: BorderRadius.circular(5),
+                          child: Container(
+                            height: 200,
+                            width: double.infinity,
+                            alignment: Alignment.center,
+                            child: _product.imageUrl.isEmpty
+                                ? Text(
+                                    "Asosiy rasm urlini kiriting",
+                                    style: TextStyle(
+                                        color: _isImage
+                                            ? Colors.black
+                                            : Colors.red),
+                                  )
+                                : Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                          _product.imageUrl,
+                                        ),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                    ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -6,7 +6,7 @@ import '../models/product.dart';
 import '../providers/products.dart';
 import 'product_grid_item.dart';
 
-class ProductsGrid extends StatelessWidget {
+class ProductsGrid extends StatefulWidget {
   const ProductsGrid({
     Key? key,
     required this.showOnlyFavorites,
@@ -15,26 +15,75 @@ class ProductsGrid extends StatelessWidget {
   final bool showOnlyFavorites;
 
   @override
+  State<ProductsGrid> createState() => _ProductsGridState();
+}
+
+class _ProductsGridState extends State<ProductsGrid> {
+  var _init = true;
+  var _isLoading = false;
+  // @override
+  // void initState() {
+  //   // Provider.of<Products>(context,listen: false).getProductFromFirebase();
+  //   Future.delayed(Duration.zero).then(
+  //     (value) {
+  //       Provider.of<Products>(context, listen: false).getProductFromFirebase();
+  //     },
+  //   );
+  //   super.initState();
+  // }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_init) {
+      setState(() {
+        _isLoading = true;
+      });
+      Provider.of<Products>(context, listen: false)
+          .getProductFromFirebase()
+          .then(
+        (value) {
+          setState(() {
+            _isLoading = false;
+          });
+        },
+      );
+    }
+    setState(() {
+      _init = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    
     final productData = Provider.of<Products>(context);
     final products =
-        showOnlyFavorites ? productData.favorites : productData.list;
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: products.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        childAspectRatio: 3 / 2,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-      ),
-      itemBuilder: (context, index) {
-        return ChangeNotifierProvider<Product>.value(
-          value: products[index],
-          child: const ProductGridItem(),
-        );
-      },
-    );
+        widget.showOnlyFavorites ? productData.favorites : productData.list;
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    } else {
+      return products.isEmpty
+          ? Center(
+              child: Text("Mahsulotlar mavjud emas"),
+            )
+          : GridView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: products.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1,
+                childAspectRatio: 3 / 2,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+              ),
+              itemBuilder: (context, index) {
+                return ChangeNotifierProvider<Product>.value(
+                  value: products[index],
+                  child: const ProductGridItem(),
+                );
+              },
+            );
+    }
   }
 }
