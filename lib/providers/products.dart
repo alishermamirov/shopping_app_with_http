@@ -58,12 +58,13 @@ class Products with ChangeNotifier {
           (key, value) {
             loadedProduct.add(
               Product(
-                  id: key,
-                  title: value["title"],
-                  description: value["description"],
-                  imageUrl: value["imageUrl"],
-                  price: value["price"],
-                  isFavorite: value["isFavorite"]),
+                id: key,
+                title: value["title"],
+                description: value["description"],
+                imageUrl: value["imageUrl"],
+                price: value["price"],
+                // isFavorite: value["isFavorite"]
+              ),
             );
           },
         );
@@ -116,7 +117,7 @@ class Products with ChangeNotifier {
       final url = Uri.parse(
           "https://shopping-app-8d541-default-rtdb.firebaseio.com/products/${updatedProduct.id}.json");
       try {
-        await http.put(
+        await http.patch(
           url,
           body: jsonEncode({
             "title": updatedProduct.title,

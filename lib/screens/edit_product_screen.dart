@@ -72,19 +72,41 @@ class _EditProductScreenState extends State<EditProductScreen> {
               );
             },
           );
-        } finally {
-          setState(() {
-            _isloading = false;
-          });
-          Navigator.of(context).pop();
         }
+        //  finally {
+        //   setState(() {
+        //     _isloading = false;
+        //   });
+        //   Navigator.of(context).pop();
+        // }
       } else {
-        Provider.of<Products>(context, listen: false).updateProduct(_product);
-        setState(() {
-          _isloading = false;
-        });
-        Navigator.of(context).pop();
+        try {
+          await Provider.of<Products>(context, listen: false)
+              .updateProduct(_product);
+        } catch (error) {
+          await showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text("Xatolik"),
+                content: Text(error.toString()),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       }
+      setState(() {
+        _isloading = false;
+      });
+      Navigator.of(context).pop();
     }
   }
 
